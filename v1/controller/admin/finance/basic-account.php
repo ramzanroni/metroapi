@@ -349,22 +349,21 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
         }
         $textsearchQury = $subQry . rtrim($textsearchQury, 'OR ');
         $basicAccounts = $readDB->prepare($textsearchQury);
-    } elseif (array_key_exists('accountname', $_GET) && array_key_exists('modify_code', $_GET)) {
-        $modify_code = $_GET['modify_code'];
-        $accountname = $_GET['accountname'];
-        if ($accountname === '') {
+    } elseif (array_key_exists('searchkey', $_GET)) {
+        $searchkey = $_GET['searchkey'];
+
+        if ($searchkey === '') {
             $response = new Response();
             $response->setHttpStatusCode(403);
             $response->setSuccess(false);
-            $response->addMessage('accountname Name missing its not be null. ');
+            $response->addMessage('Search string missing, its not be null. ');
             $response->send();
             exit;
         }
-        $mainQuery = "SELECT accountcode,accountname,modify_code FROM chartmaster WHERE modify_code='$modify_code' OR ";
-        $searchKeywordList = explode(' ', $accountname);
-
+        $mainQuery = "SELECT accountcode,accountname,modify_code FROM chartmaster WHERE ";
+        $searchKeywordList = explode(' ', $searchkey);
         foreach ($searchKeywordList as $searchKey) {
-            $textsearchQury .= "accountname LIKE '%" . $searchKey . "%' OR ";
+            $textsearchQury .= "accountname LIKE '%" . $searchKey . "%' OR modify_code LIKE '%" . $searchKey . "%' OR ";
         }
         $textsearchQury = $mainQuery . rtrim($textsearchQury, 'OR ');
         $basicAccounts = $readDB->prepare($textsearchQury);

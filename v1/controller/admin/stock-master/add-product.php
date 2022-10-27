@@ -142,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
             // multiple image upload
             $multipleImage = $jsonData->multipleImg;
             foreach ($multipleImage as $image) {
-                $imagename = $image->image;
+                $imagename = $image;
                 $addMultiImage = $writeDB->prepare('INSERT INTO item_ref_file(stockid, doc_name) VALUES (:stockid,:doc_name)');
                 $addMultiImage->bindParam(':stockid', $stockid, PDO::PARAM_STR);
                 $addMultiImage->bindParam(':doc_name', $imagename, PDO::PARAM_STR);
@@ -244,15 +244,47 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
         if ($rowCount === 1) {
 
             try {
-                $updateProduct = $writeDB->prepare('UPDATE stockmaster SET code=:code, categoryid=:categoryid, description=:description, longdescription=:longdescription, units=:units, groupid=:groupid, webprice=:webprice, img=:img WHERE stockid=:stockid');
-                $updateProduct->bindParam(':code', $code, PDO::PARAM_STR);
-                $updateProduct->bindParam(':categoryid', $categoryid, PDO::PARAM_STR);
-                $updateProduct->bindParam(':description', $description, PDO::PARAM_STR);
-                $updateProduct->bindParam(':longdescription', $longdescription, PDO::PARAM_STR);
-                $updateProduct->bindParam(':units', $units, PDO::PARAM_STR);
-                $updateProduct->bindParam(':groupid', $groupid, PDO::PARAM_STR);
-                $updateProduct->bindParam(':webprice', $webprice, PDO::PARAM_STR);
-                $updateProduct->bindParam(':img', $img, PDO::PARAM_STR);
+                $mainQuery = "UPDATE stockmaster SET ";
+                if ($categoryid != '') {
+                    $mainQuery = $mainQuery . 'categoryid=:categoryid, groupid=:groupid, ';
+                }
+                if ($description != '') {
+                    $mainQuery = $mainQuery . 'description=:description, ';
+                }
+                if ($longdescription != '') {
+                    $mainQuery = $mainQuery . 'longdescription=:longdescription, ';
+                }
+                if ($units != '') {
+                    $mainQuery = $mainQuery . 'units=:units, ';
+                }
+                if ($webprice != '') {
+                    $mainQuery = $mainQuery . 'webprice=:webprice, ';
+                }
+                if ($img != '') {
+                    $mainQuery = $mainQuery . 'img=:img, ';
+                }
+                $mainQuery = substr($mainQuery, 0, -2) . ", updatetime=NOW() WHERE stockid=:stockid";
+
+                $updateProduct = $writeDB->prepare($mainQuery);
+                if ($categoryid != '') {
+                    $updateProduct->bindParam(':categoryid', $categoryid, PDO::PARAM_STR);
+                    $updateProduct->bindParam(':groupid', $categoryid, PDO::PARAM_STR);
+                }
+                if ($description != '') {
+                    $updateProduct->bindParam(':description', $description, PDO::PARAM_STR);
+                }
+                if ($longdescription != '') {
+                    $updateProduct->bindParam(':longdescription', $longdescription, PDO::PARAM_STR);
+                }
+                if ($units != '') {
+                    $updateProduct->bindParam(':units', $units, PDO::PARAM_STR);
+                }
+                if ($webprice != '') {
+                    $updateProduct->bindParam(':webprice', $webprice, PDO::PARAM_STR);
+                }
+                if ($img != '') {
+                    $updateProduct->bindParam(':img', $img, PDO::PARAM_STR);
+                }
                 $updateProduct->bindParam(':stockid', $stockid, PDO::PARAM_STR);
                 $updateProduct->execute();
                 $rowCount = $updateProduct->rowCount();
@@ -450,8 +482,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $query = $readDB->prepare($mainQuery . ' WHERE ' . $textsearchQury . ' AND stockmaster.groupid=:category_id');
             $query->bindParam(':category_id', $category, PDO::PARAM_INT);
         } else {
+            echo $mainQuery . ' WHERE ' . $textsearchQury;
             $query = $readDB->prepare($mainQuery . ' WHERE ' . $textsearchQury);
         }
+    } elseif (array_key_exists('searchkey', $_GET)) {
+        $searchkey = $_GET['searchkey'];
+        if ($searchkey === '') {
+            $response = new Response();
+            $response->setHttpStatusCode(403);
+            $response->setSuccess(false);
+            $response->addMessage('Search Key missing. ');
+            $response->send();
+            exit();
+        }
+        $textsearchQury = '';
+
+        $searchKeywordList = explode(' ', $searchkey);
+
+        foreach ($searchKeywordList as $searchKey) {
+            $textsearchQury = $textsearchQury . " stockmaster.description LIKE '%" . $searchKey . "%' OR stockgroup.groupname LIKE '%" . $searchKey . "%' OR  stockmaster.stockid LIKE '%" . $searchKey . "%' OR ";
+        }
+        $textsearchQury = rtrim($textsearchQury, 'OR ');
+        $query = $readDB->prepare($mainQuery . ' WHERE ' . $textsearchQury);
     } elseif (empty($_GET)) {
         $querySQL = $mainQuery;
         $query = $readDB->prepare($querySQL);
@@ -480,11 +532,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 $imgArr[] = $ip_server . $rowImg['doc_name'];
             }
             if ($row['img'] == '') {
-                $img =  $ip_server . "000.jpg";
+                $img =  "000.jpg";
             } else {
-                $img = $ip_server . $row['stockid'] . '.jpg';
+                $img = $row['img'];
             }
-            $product = new AddProduct($row['stockid'], $row['code'], $row['categoryid'], $row['description'], $row['longdescription'], $row['units'], $row['categoryid'], $row['webprice'], $img, $imgArr);
+            $product = new AddProduct($row['stockid'], $row['code'], $row['categoryid'], $row['description'], $row['longdescription'], $row['units'], $row['category'], $row['webprice'], $img, $imgArr);
             $productArray[] = $product->returnProducrArray();
         }
         $returnArray = array();

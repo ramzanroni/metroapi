@@ -1,10 +1,10 @@
 <?php
 $servername = "eon_bazar";
-$username = "roni";
-$password = "roni";
+$username = "metrosoft";
+$password = "metrosoft";
 
 // Create connection
-$conn = new mysqli("localhost", "roni", "roni", "eon_bazar");
+$conn = new mysqli("localhost", "metrosoft", "metrosoft", "eon_bazar");
 // $conn = new mysqli($servername, $username, $password);
 
 // Check connection

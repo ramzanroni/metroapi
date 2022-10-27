@@ -340,7 +340,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
         foreach ($searchKeywordList as $searchKey) {
             $textsearchQury .= "name LIKE '%" . $searchKey . "%' OR phone1 LIKE '%" . $searchKey . "%' OR ";
         }
-        $textsearchQury = $subQry . rtrim($textsearchQury, 'OR ');
+        $textsearchQury = $subQry . rtrim($textsearchQury, 'OR ') . " ORDER BY name ASC";
         $result = $readDB->prepare($textsearchQury);
         $result->execute();
     } else {

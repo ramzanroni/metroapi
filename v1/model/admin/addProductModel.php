@@ -121,6 +121,7 @@ class AddProduct
         $product['description'] = $this->getDescription();
         $product['longdescription'] = $this->getLongdescription();
         $product['units'] = $this->getUnits();
+        $product['category'] = $this->getGroupid();
         // $product['discountcategory'] = $this->getDiscountcategory();
 
         $product['webprice'] = $this->getWebprice();

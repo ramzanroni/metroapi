@@ -225,7 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
         } else {
             $subConditionalSubQuery = " AND ";
         }
-        $dateRangeQuery = ' (salesorders.orddate >="' . $startDate . '" AND salesorders.orddate <="' . $endDate . '") ';
+        $dateRangeQuery = ' (salesorders.deliverydate >="' . $startDate . '" AND salesorders.deliverydate <="' . $endDate . '") ';
         $mainQuery = $mainQuery . $subConditionalSubQuery . $dateRangeQuery;
     }
     if (array_key_exists('start_date', $_GET) || array_key_exists('end_date', $_GET)) {
@@ -265,14 +265,33 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
         $statusQuery = ' salesorders.so_status=' . $status;
         $mainQuery = $mainQuery . $subConditionalSubQuery . $statusQuery;
     }
+    if (array_key_exists('debtorno', $_GET)) {
+        $debtorno = $_GET['debtorno'];
+        if ($debtorno == '' || !is_numeric($debtorno)) {
+            $response = new Response();
+            $response->setHttpStatusCode(400);
+            $response->setSuccess(false);
+            $response->addMessage('Debtor no be numeric and not null.');
+            $response->send();
+            exit();
+        }
+        if ($subConditionalSubQuery == '') {
+            $subConditionalSubQuery = ' WHERE ';
+        } else {
+            $subConditionalSubQuery = " AND ";
+        }
+        $debtorNoQuery = ' salesorders.debtorno=' . $debtorno;
+        $mainQuery = $mainQuery . $subConditionalSubQuery . $debtorNoQuery;
+    }
+
     $mainQuery = $mainQuery . ' ORDER BY salesorders.issue_date DESC ';
     $orderSQL = $readDB->prepare($mainQuery);
     if ($orderno != '') {
         $orderSQL->bindParam(':orderno', $orderno, PDO::PARAM_STR);
     }
     $orderSQL->execute();
-    $rowCount = $orderSQL->rowCount();
-    if ($rowCount > 0) {
+    $rowCountMain = $orderSQL->rowCount();
+    if ($rowCountMain > 0) {
         $ordersArr = array();
         while ($orderRow = $orderSQL->fetch(PDO::FETCH_ASSOC)) {
             $orderNo = $orderRow['orderno'];
@@ -291,7 +310,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
             $ordersArr[] = $orderInfo->OrderReturnArray();
         }
         $returnArray = array();
-        $returnArray['rows_returned'] = $rowCount;
+        $returnArray['rows_returned'] = $rowCountMain;
         $returnArray['orders'] = $ordersArr;
         $response = new Response();
         $response->setHttpStatusCode(200);

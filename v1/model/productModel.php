@@ -15,9 +15,10 @@ class Product
     private $_webprice;
     private $_img;
     private $_status;
+    private $_oldPrice;
     private $_multiImg;
 
-    public function __construct($stockid, $description, $category_id, $category, $longdescription, $units, $discountcategory, $taxcatid, $webprice, $img, $multiImg)
+    public function __construct($stockid, $description, $category_id, $category, $longdescription, $units, $discountcategory, $taxcatid, $webprice, $img, $oldPrice, $multiImg)
     {
         $this->setStockid($stockid);
         $this->setDescription($description);
@@ -29,6 +30,7 @@ class Product
         $this->setTaxcatid($taxcatid);
         $this->setWebprice($webprice);
         $this->setImg($img);
+        $this->setOldPrice($oldPrice);
         $this->setMultiImg($multiImg);
     }
 
@@ -68,6 +70,10 @@ class Product
     public function getImg()
     {
         return $this->_img;
+    }
+    public function getoldPrice()
+    {
+        return $this->_oldPrice;
     }
     // public function getStatus()
     // {
@@ -162,6 +168,10 @@ class Product
     //     $this->_status = $status;
     // }
 
+    public function setOldPrice($oldPrice)
+    {
+        $this->_oldPrice = $oldPrice;
+    }
     public function setMultiImg($multiImg)
     {
         $this->_multiImg = $multiImg;
@@ -181,6 +191,7 @@ class Product
         $product['taxcatid'] = $this->getTaxcatid();
         $product['webprice'] = $this->getWebprice();
         $product['img'] = $this->getImg();
+        $product['oldPrice'] = $this->getoldPrice();
         $product['multipleImg'] = $this->getMultiImg();
         // $product['status'] = $this->getStatus();
         return $product;

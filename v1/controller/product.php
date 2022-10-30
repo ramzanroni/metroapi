@@ -151,7 +151,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             } else {
                 $img = $ip_server . $row['stockid'] . '.jpg';
             }
-            $product = new Product($row['stockid'], $row['description'], $row['categoryId'], $row['category'], $row['longdescription'], $row['units'], $row['discountcategory'], $row['taxcatid'], $row['webprice'], $img, $imgArr);
+
+            // oldPrice 
+            $oldPrice = $readDB->prepare('SELECT * FROM `prices` WHERE stockid=:stockid');
+            $oldPrice->bindParam(':stockid', $stockID, PDO::PARAM_STR);
+            $oldPrice->execute();
+            $rowOldPrice = $oldPrice->fetch(PDO::FETCH_ASSOC);
+            $oldPriceValue = $rowOldPrice['price'];
+            $product = new Product($row['stockid'], $row['description'], $row['categoryId'], $row['category'], $row['longdescription'], $row['units'], $row['discountcategory'], $row['taxcatid'], $row['webprice'], $img, $oldPriceValue, $imgArr);
             $productArray[] = $product->returnProducrArray();
         }
         $returnArray = array();

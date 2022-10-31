@@ -27,72 +27,101 @@ try {
 }
 //get data
 if ($_SERVER["REQUEST_METHOD"] === "GET") {
-    try {
-        if (array_key_exists("orderno", $_GET)) {
-            $orderno = $_GET["orderno"];
-            if ($orderno === "") {
-                $response = new Response();
-                $response->setHttpStatusCode(400);
-                $response->setSuccess(false);
-                $response->addMessage("orderno cannot be blank");
-                $response->send();
-                exit();
-            }
-            $purchordersSQL = $readDB->prepare("SELECT * FROM purchorders WHERE orderno=:orderno");
-            $purchordersSQL->bindParam(":orderno", $orderno, PDO::PARAM_STR);
-        } else {
-            $purchordersSQL = $readDB->prepare("SELECT * FROM purchorders");
-        }
-        $purchordersSQL->execute();
-        $rowCount = $purchordersSQL->rowCount();
-        if ($rowCount === 0) {
-            $response = new Response();
-            $response->setHttpStatusCode(404);
-            $response->setSuccess(false);
-            $response->addMessage("Data not found");
-            $response->send();
-            exit();
-        }
-        $purchordersArray = array();
-        while ($row = $purchordersSQL->fetch(PDO::FETCH_ASSOC)) {
-            $orderNo = $row["orderno"];
-            $totalPriceSql = $readDB->prepare('SELECT `unitprice`,`quantityord` FROM `purchorderdetails` WHERE `orderno`=:orderno');
-            $totalPriceSql->bindParam(':orderno', $orderNo, PDO::PARAM_STR);
-            $totalPriceSql->execute();
-            $totalPrice = 0;
-            while ($itemRow = $totalPriceSql->fetch(PDO::FETCH_ASSOC)) {
-                $totalPrice += $itemRow['unitprice'] * $itemRow['quantityord'];
-            }
+    // try {
+    //     $mainQuery='SELECT purchorders.orderno, purchorders.supplierno, purchorders.orddate, purchorders.initiator, purchorders.deladd1, purchorders.contact, purchorders.deliverydate, purchorders.stat_comment, purchorders.status, suppliers.suppname FROM purchorders INNER JOIN suppliers ON suppliers.supplierid=purchorders.supplierno';
 
-            $purchordersData = new Purchorders($orderNo, $row["supplierno"], $row["orddate"], $row["dateprinted"], $row["initiator"], $row["intostocklocation"], $row["deladd1"], $row["deliverydate"], $row["status"], $row["stat_comment"], $row["authorized_by"], $row["authorized_date"], $totalPrice);
-            $purchordersArray[] = $purchordersData->returnPurchordersArray();
-        }
-        $returnData = array();
-        $returnData["rows_returned"] = $rowCount;
-        $returnData["purchorders"] = $purchordersArray;
-        $response = new Response();
-        $response->setHttpStatusCode(200);
-        $response->setSuccess(true);
-        $response->toCache(true);
-        $response->setData($returnData);
-        $response->send();
-        exit;
-    } catch (PurchordersException $ex) {
-        $response = new Response();
-        $response->setHttpStatusCode(500);
-        $response->setSuccess(false);
-        $response->addMessage($ex->getMessage());
-        $response->send();
-        exit;
-    } catch (PDOException $ex) {
-        error_log("Database query error - " . $ex, 1);
-        $response = new Response();
-        $response->setHttpStatusCode(500);
-        $response->setSuccess(false);
-        $response->addMessage($ex->getMessage());
-        $response->send();
-        exit();
-    }
+
+
+    //     if (array_key_exists("orderno", $_GET)) {
+    //         $orderno = $_GET["orderno"];
+    //         if ($orderno === "") {
+    //             $response = new Response();
+    //             $response->setHttpStatusCode(400);
+    //             $response->setSuccess(false);
+    //             $response->addMessage("orderno cannot be blank");
+    //             $response->send();
+    //             exit();
+    //         }
+    //        $mainQuery .= "WHERE purchorders.orderno=:orderno ";
+
+    //     } 
+    //     $subConditionalSubQuery = '';
+    //     if (array_key_exists('searchTxt', $_GET)) {
+    //         $searchTxt = $_GET['searchTxt'];
+
+    //         if ($searchkey === '') {
+    //             $response = new Response();
+    //             $response->setHttpStatusCode(403);
+    //             $response->setSuccess(false);
+    //             $response->addMessage('Search string missing, its not be null. ');
+    //             $response->send();
+    //             exit;
+    //         }
+    //         if ($subConditionalSubQuery == '') {
+    //             $subConditionalSubQuery = ' WHERE ';
+    //         }
+    //         $searchKeywordList = explode(' ', $searchTxt);
+    //         foreach ($searchKeywordList as $searchKey) {
+    //             $textsearchQury .= "salesorders.contactphone LIKE '%" . $searchKey . "%' OR debtorsmaster.name LIKE '%" . $searchKey . "%' OR ";
+    //         }
+    //         $mainQuery = $mainQuery . $subConditionalSubQuery . ' (' . rtrim($textsearchQury, 'OR ') . ')';
+    //     }
+
+
+
+
+
+
+    //     $purchordersSQL->execute();
+    //     $rowCount = $purchordersSQL->rowCount();
+    //     if ($rowCount === 0) {
+    //         $response = new Response();
+    //         $response->setHttpStatusCode(404);
+    //         $response->setSuccess(false);
+    //         $response->addMessage("Data not found");
+    //         $response->send();
+    //         exit();
+    //     }
+    //     $purchordersArray = array();
+    //     while ($row = $purchordersSQL->fetch(PDO::FETCH_ASSOC)) {
+    //         $orderNo = $row["orderno"];
+    //         $totalPriceSql = $readDB->prepare('SELECT `unitprice`,`quantityord` FROM `purchorderdetails` WHERE `orderno`=:orderno');
+    //         $totalPriceSql->bindParam(':orderno', $orderNo, PDO::PARAM_STR);
+    //         $totalPriceSql->execute();
+    //         $totalPrice = 0;
+    //         while ($itemRow = $totalPriceSql->fetch(PDO::FETCH_ASSOC)) {
+    //             $totalPrice += $itemRow['unitprice'] * $itemRow['quantityord'];
+    //         }
+
+    //         $purchordersData = new Purchorders($orderNo, $row["supplierno"], $row["orddate"], $row["dateprinted"], $row["initiator"], $row["intostocklocation"], $row["deladd1"], $row["deliverydate"], $row["status"], $row["stat_comment"], $row["authorized_by"], $row["authorized_date"], $totalPrice);
+    //         $purchordersArray[] = $purchordersData->returnPurchordersArray();
+    //     }
+    //     $returnData = array();
+    //     $returnData["rows_returned"] = $rowCount;
+    //     $returnData["purchorders"] = $purchordersArray;
+    //     $response = new Response();
+    //     $response->setHttpStatusCode(200);
+    //     $response->setSuccess(true);
+    //     $response->toCache(true);
+    //     $response->setData($returnData);
+    //     $response->send();
+    //     exit;
+    // } catch (PurchordersException $ex) {
+    //     $response = new Response();
+    //     $response->setHttpStatusCode(500);
+    //     $response->setSuccess(false);
+    //     $response->addMessage($ex->getMessage());
+    //     $response->send();
+    //     exit;
+    // } catch (PDOException $ex) {
+    //     error_log("Database query error - " . $ex, 1);
+    //     $response = new Response();
+    //     $response->setHttpStatusCode(500);
+    //     $response->setSuccess(false);
+    //     $response->addMessage($ex->getMessage());
+    //     $response->send();
+    //     exit();
+    // }
 }
 //Post data
 elseif ($_SERVER["REQUEST_METHOD"] === "POST") {
